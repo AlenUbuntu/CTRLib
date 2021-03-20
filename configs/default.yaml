@@ -1,0 +1,9 @@
+DEVICE: 'cuda:0'
+OUTPUT_DIR: './experiments/'
+DATASET:
+  NAME: 'Criteo'
+  FOLD: 0
+  CACHE_PATH: './criteo'
+  REBUILD_CACHE: False 
+DATALOADER:
+  BATCH_SIZE: 64

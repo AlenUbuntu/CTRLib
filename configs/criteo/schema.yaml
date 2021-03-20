@@ -1,0 +1,46 @@
+## Input Data Schema
+
+# feature id: field_name (unique)
+# The order and feature id must be consistent with the raw data. 
+# Used to indicate valid features, i.e., features selected as inputs and their corresponding fields
+# field name is case sensitive here. Default is 'field_x' (x is an index number) if not provided in original data
+
+1: field_1
+2: field_2
+3: field_3
+4: field_4
+5: field_5
+6: field_6
+7: field_7
+8: field_8
+9: field_9
+10: field_10
+11: field_11
+12: field_12
+13: field_13
+14: field_14
+15: field_15
+16: field_16
+17: field_17
+18: field_18
+19: field_19
+20: field_20
+21: field_21
+22: field_22
+23: field_23
+24: field_24
+25: field_25
+26: field_26
+27: field_27
+28: field_28
+29: field_29
+30: field_30
+31: field_31
+32: field_32
+33: field_33
+34: field_34
+35: field_35
+36: field_36
+37: field_37
+38: field_38
+39: field_39

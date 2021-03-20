@@ -1,0 +1,401 @@
+## Field Configuration
+
+# Note that we distinguish the concept of `field` and `feature` to support multi-value features.
+# Each field consists 5 attributes `type`, `transform`, `parameter`, `missing_strategy`, `missing_value`, `feat_stat`.
+# 1. field: field name required. Default is 'field_x' (x is an index number) if not provided in original data
+# 2. type: required, field type, `category` or `continuous`.
+# 3. transform: field transform.
+# 4. parameter: main parameter for transform.
+#    (1) type: category
+#         transform: `hash_bucket` or `vocab` or `identity`.
+#           hash_bucket  ==> categorical_column_with_hash_bucket
+#           vocab        ==> categorical_column_with_vocabulary_list
+#           identity     ==> categorical_column_with_identity
+#         parameter: examples as follows,
+#           1000            (hash_bucket_size  for `hash_bucket`)
+#           'a' 1000        (path to vocabulary file where each line is in the format of 'Category\tCount')
+#           15              (num_buckets  for `identity`)
+#    (2) type: continuous
+#         transform: `min_max`, `log`, `standard` normalization for normalizer_fn in
+#                    NumericColumn, set empty to not do normalization.
+#           `min_max`    ==> x = (x-min) / (max-min);
+#           `log`        ==> x = log(x), all field values must >= 1
+#           `standard`   ==> x = (x-mean) / std
+#
+#         parameter:
+#           normalization: [min, max] or [mean, std] list for `min_max` or `standard`; set empty for `log`.
+#           boundaries: optional, set boundaries, eg: [5, 10, 15, 20] for `discretize`
+#                       (bucketized continuous feature for wide input or as cross feature),
+#                       set empty for not use continuous feature for wide input.
+# 5. missing_strategy: specify how to deal with missing field values
+#    (1) type: category
+#         missing_strategy: `most-frequent`, `special-token`.
+#           `most-frequent`   ==> replace the missing feature '' with the most frequent class.
+#           `special-token`   ==> treat the missing feature '' as a special class.
+#           `zero-out`        ==> encode the missing feature via zero embedding
+#    (2) type: continuous
+#         missing_strategy: `min`, `max`, `most-frequent`, `mean`, `median`, `zero-out`
+#           `min`             ==> replace the missing feature '' with the minimum feature value.
+#           `max`             ==> replace the missing feature '' with the maximum feature value.
+#           `most-frequent`   ==> replace the missing feature '' with the most frequent feature value.
+#           `mean`            ==> replace the missing feature '' with the average feature value.
+#           `median`          ==> replace the missing feature '' with the median feature value.
+#           `zero-out`        ==> set the missing feature '' as a value that makes no contribution to learning, e.g., 0.
+# 6. missing_value: value that indicates the feature is missing based on raw data
+# 7. feat_stat: path to the json file containing the statistic info of a field.
+#    (1) type: category
+#        {'most_freq': xxx}
+#    (2) type: continuous
+#        {'min':xxx, 'max':xxx, 'mean':xxx, 'std':xxx, 'median':xxx, 'most_freq':xxx}
+# Set unused field by using symbol `#` ahead of the lines.
+# Category field with hash_bucket using embedding_column to feed deep, others by indicator_column.
+# All listed fields are used in model.
+
+# Q & A about hash_bucket_size:
+# If category size=1000, how much should hash_bucket_size be ?
+#   An interesting discovery is that randomly chose N number a_i between 1~N, i=1,...N
+#     let b_i = a_i % N, the distinct b_i from all N number is about 0.633.
+#     in other words, a random hash func chose N as hash_bucket_size collision rate is 0.633.
+#   Recommend `hash_bucket_size` to be 2~3*category size.
+#     larger `hash_bucket_size` require more memory and complexity, but smaller cause more collision
+#   Here use the strategy that
+#     for low sparsity category, set `hash_bucket_size` 3~4*category size to reduce collision
+#     for high sparsity category, set 1.5~2*category size to save memory.
+
+field_1:
+  type: continuous
+  transform: log
+  parameter:
+    normalization: []
+    boundaries: []
+  missing_strategy: most-frequent
+  missing_value: ''
+  feat_stat: 'feature_0_stat.json'
+
+field_2:
+  type: continuous
+  transform: log
+  parameter:
+    normalization: []
+    boundaries: []
+  missing_strategy: most-frequent
+  missing_value: ''
+  feat_stat: 'feature_1_stat.json'
+
+field_3:
+  type: continuous
+  transform: log 
+  parameter:
+    normalization: []
+    boundaries: []
+  missing_strategy: most-frequent
+  missing_value: ''
+  feat_stat: 'feature_2_stat.json'
+
+field_4:
+  type: continuous
+  transform: log 
+  parameter:
+    normalization: []
+    boundaries: []
+  missing_strategy: most-frequent
+  missing_value: ''
+  feat_stat: 'feature_3_stat.json'
+
+field_5:
+  type: continuous
+  transform: log 
+  parameter:
+    normalization: []
+    boundaries: []
+  missing_strategy: most-frequent
+  missing_value: ''
+  feat_stat: 'feature_4_stat.json'
+
+field_6:
+  type: continuous
+  transform: log 
+  parameter:
+    normalization: []
+    boundaries: []
+  missing_strategy: most-frequent
+  missing_value: ''
+  feat_stat: 'feature_5_stat.json'
+
+field_7:
+  type: continuous
+  transform: log 
+  parameter:
+    normalization: []
+    boundaries: []
+  missing_strategy: most-frequent
+  missing_value: ''
+  feat_stat: 'feature_6_stat.json'
+
+field_8:
+  type: continuous
+  transform: log 
+  parameter:
+    normalization: []
+    boundaries: []
+  missing_strategy: most-frequent
+  missing_value: ''
+  feat_stat: 'feature_7_stat.json'
+
+field_9:
+  type: continuous
+  transform: log 
+  parameter:
+    normalization: []
+    boundaries: []
+  missing_strategy: most-frequent
+  missing_value: ''
+  feat_stat: 'feature_8_stat.json'
+
+field_10:
+  type: continuous
+  transform: log 
+  parameter:
+    normalization: []
+    boundaries: []
+  missing_strategy: most-frequent
+  missing_value: ''
+  feat_stat: 'feature_9_stat.json'
+
+field_11:
+  type: continuous
+  transform: log 
+  parameter:
+    normalization: []
+    boundaries: []
+  missing_strategy: most-frequent
+  missing_value: ''
+  feat_stat: 'feature_10_stat.json'
+
+field_12:
+  type: continuous
+  transform: log 
+  parameter:
+    normalization: []
+    boundaries: []
+  missing_strategy: most-frequent
+  missing_value: ''
+  feat_stat: 'feature_11_stat.json'
+
+field_13:
+  type: continuous
+  transform: log 
+  parameter:
+    normalization: []
+    boundaries: []
+  missing_strategy: most-frequent
+  missing_value: ''
+  feat_stat: 'feature_12_stat.json'
+
+field_14:
+  type: category
+  transform: vocab 
+  parameter: 'feat_13.txt'
+  missing_strategy: special-token
+  missing_value: ''
+  feat_stat: 'feature_13_stat.json'
+
+field_15:
+  type: category
+  transform: vocab 
+  parameter: 'feat_14.txt'
+  missing_strategy: special-token
+  missing_value: ''
+  feat_stat: 'feature_14_stat.json'
+
+field_16:
+  type: category
+  transform: vocab 
+  parameter: 'feat_15.txt'
+  missing_strategy: special-token
+  missing_value: ''
+  feat_stat: 'feature_15_stat.json'
+
+field_17:
+  type: category
+  transform: vocab 
+  parameter: 'feat_16.txt'
+  missing_strategy: special-token
+  missing_value: ''
+  feat_stat: 'feature_16_stat.json'
+
+field_18:
+  type: category
+  transform: vocab 
+  parameter: 'feat_17.txt'
+  missing_strategy: special-token
+  missing_value: ''
+  feat_stat: 'feature_17_stat.json'
+
+field_19:
+  type: category
+  transform: vocab 
+  parameter: 'feat_18.txt'
+  missing_strategy: special-token
+  missing_value: ''
+  feat_stat: 'feature_18_stat.json'
+
+field_20:
+  type: category
+  transform: vocab 
+  parameter: 'feat_19.txt'
+  missing_strategy: special-token
+  missing_value: ''
+  feat_stat: 'feature_19_stat.json'
+
+field_21:
+  type: category
+  transform: vocab 
+  parameter: 'feat_20.txt'
+  missing_strategy: special-token
+  missing_value: ''
+  feat_stat: 'feature_20_stat.json'
+
+field_22:
+  type: category
+  transform: vocab 
+  parameter: 'feat_21.txt'
+  missing_strategy: special-token
+  missing_value: ''
+  feat_stat: 'feature_21_stat.json'
+
+field_23:
+  type: category
+  transform: vocab 
+  parameter: 'feat_22.txt'
+  missing_strategy: special-token
+  missing_value: ''
+  feat_stat: 'feature_22_stat.json'
+
+field_24:
+  type: category
+  transform: vocab 
+  parameter: 'feat_23.txt'
+  missing_strategy: special-token
+  missing_value: ''
+  feat_stat: 'feature_23_stat.json'
+
+field_25:
+  type: category
+  transform: vocab 
+  parameter: 'feat_24.txt'
+  missing_strategy: special-token
+  missing_value: ''
+  feat_stat: 'feature_24_stat.json'
+
+field_26:
+  type: category
+  transform: vocab 
+  parameter: 'feat_25.txt'
+  missing_strategy: special-token
+  missing_value: ''
+  feat_stat: 'feature_25_stat.json'
+
+field_27:
+  type: category
+  transform: vocab 
+  parameter: 'feat_26.txt'
+  missing_strategy: special-token
+  missing_value: ''
+  feat_stat: 'feature_26_stat.json'
+
+field_28:
+  type: category
+  transform: vocab 
+  parameter: 'feat_27.txt'
+  missing_strategy: special-token
+  missing_value: ''
+  feat_stat: 'feature_27_stat.json'
+
+field_29:
+  type: category
+  transform: vocab 
+  parameter: 'feat_28.txt'
+  missing_strategy: special-token
+  missing_value: ''
+  feat_stat: 'feature_28_stat.json'
+
+field_30:
+  type: category
+  transform: vocab 
+  parameter: 'feat_29.txt'
+  missing_strategy: special-token
+  missing_value: ''
+  feat_stat: 'feature_29_stat.json'
+
+field_31:
+  type: category
+  transform: vocab 
+  parameter: 'feat_30.txt'
+  missing_strategy: special-token
+  missing_value: ''
+  feat_stat: 'feature_30_stat.json'
+
+field_32:
+  type: category
+  transform: vocab 
+  parameter: 'feat_31.txt'
+  missing_strategy: special-token
+  missing_value: ''
+  feat_stat: 'feature_31_stat.json'
+
+field_33:
+  type: category
+  transform: vocab 
+  parameter: 'feat_32.txt'
+  missing_strategy: special-token
+  missing_value: ''
+  feat_stat: 'feature_32_stat.json'
+
+field_34:
+  type: category
+  transform: vocab 
+  parameter: 'feat_33.txt'
+  missing_strategy: special-token
+  missing_value: ''
+  feat_stat: 'feature_33_stat.json'
+
+field_35:
+  type: category
+  transform: vocab 
+  parameter: 'feat_34.txt'
+  missing_strategy: special-token
+  missing_value: ''
+  feat_stat: 'feature_34_stat.json'
+
+field_36:
+  type: category
+  transform: vocab 
+  parameter: 'feat_35.txt'
+  missing_strategy: special-token
+  missing_value: ''
+  feat_stat: 'feature_35_stat.json'
+
+field_37:
+  type: category
+  transform: vocab 
+  parameter: 'feat_36.txt'
+  missing_strategy: special-token
+  missing_value: ''
+  feat_stat: 'feature_36_stat.json'
+
+field_38:
+  type: category
+  transform: vocab 
+  parameter: 'feat_37.txt'
+  missing_strategy: special-token
+  missing_value: ''
+  feat_stat: 'feature_37_stat.json'
+
+field_39:
+  type: category
+  transform: vocab 
+  parameter: 'feat_38.txt'
+  missing_strategy: special-token
+  missing_value: ''
+  feat_stat: 'feature_38_stat.json'
