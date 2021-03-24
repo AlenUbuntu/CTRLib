@@ -9,6 +9,7 @@ from data_manager.build import make_dataloader
 from sklearn.metrics import roc_auc_score
 from copy import deepcopy
 from torch.utils.collect_env import get_pretty_env_info
+from common.profile import profile
 
 from models.lr import LogisticRegressionModel
 from models.fm import FactorizationMachineModel
@@ -179,6 +180,15 @@ def test(cfg, model, test_loader, device='cpu'):
     return auc, log_loss
 
 
+def profile_model(model, test_loader, device='cpu'):
+    batch = next(iter(test_loader))
+    y = batch['label']
+    del batch['label']
+
+    total_ops, total_params = profile(model, (batch, y))
+
+    return total_ops, total_params
+
 def main():
     parser = argparse.ArgumentParser(description='PyTorch RecLib')
 
@@ -226,12 +236,19 @@ def main():
     # create model 
     model = get_model(cfg, field_info)
 
-    best_model = train(cfg, model, train_loader, valid_loader, save=False)
-    auc, log_loss = test(cfg, best_model, test_loader, device=cfg.DEVICE)
+    # best_model = train(cfg, model, train_loader, valid_loader, save=False)
+    # auc, log_loss = test(cfg, best_model, test_loader, device=cfg.DEVICE)
+    # print("*"*20)
+    # print("* Test AUC: {:.5f} *".format(auc))
+    # print("* Test Log Loss: {:.5f} *".format(log_loss))
+    # print("*"*20)
+
+    macs, params = profile_model(model, test_loader, device=cfg.DEVICE)
     print("*"*20)
-    print("* Test AUC: {:.5f} *".format(auc))
-    print("* Test Log Loss: {:.5f} *".format(log_loss))
-    print("*"*20)
+    print("* MACs (M): {} *".format(macs/10**6))
+    print("* #Params (M): {} *".format(params / 10**6))
+    print("* Model Size (MB): {} *".format(params * 8 / 10**6))
+    print('*'*20)
 
 if __name__ == '__main__':
     main()

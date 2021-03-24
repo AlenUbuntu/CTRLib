@@ -15,4 +15,4 @@ class LogisticRegressionModel(torch.nn.Module):
 
     def forward(self, data):
         out = self.linear(data)
-        return out 
+        return out

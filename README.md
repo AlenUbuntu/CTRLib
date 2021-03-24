@@ -30,24 +30,26 @@
   * [Criteo 1TB Click Logs dataset](https://ailab.criteo.com/download-criteo-1tb-click-logs-dataset/)
    * [Avazu: Click-Through Rate Prediction](https://www.kaggle.com/c/avazu-ctr-prediction/data)
 
-| Dataset | Positive | Negative| Total | Imbalance Ratio|
-| :------:| :------: | :------:| :------:| :------:|
-| Criteo |  29,040 | 970,960 | 1,000,000| 33.44 |
-
 ### Criteo
 
-|   Method  | AUC | Log Loss | #Params | Time x Epochs (Training) | FLOPS |
-|:---------:|:---:|:--------:|:-------:|:------------------------:|:-----:|
-|     LR    |  0.74896 &pm; 0.00018   |    0.33974 &pm; 0.00114      |         |                          |       |
-|     FM    |  0.75236 &pm; 0.00058   |     0.27502 &pm; 0.00329     |         |                          |       |
-| DeepCross |     |          |         |                          |       |
-| Wide&Deep |     |          |         |                          |       |
-|   DeepFM  |     |          |         |                          |       |
-|    DCN    |     |          |         |                          |       |
-|  xDeepFM  |     |          |         |                          |       |
-|  AutoInt+ |     |          |         |                          |       |
-|  FiBiNet  |     |          |         |                          |       |
-|    AFN+   |     |          |         |                          |       |
+|   Method  | AUC | Log Loss | #Params (M) | Time (s) x Epochs | MACs (M) | Model Size (MB) | 
+|:---------:|:---:|:--------:|:-------:|:------------------------:|:-----:|:-----:|
+|     LR    |  0.74896   |    0.33974     |   0.068    |    30.8 x 20    |   9.2e-5  | 0.54 |
+|     FM    |  0.75236   |    0.27502     |    4.41    |    62.3 x 20    |   0.196   | 35.31|
+|     DNN   |            |                |         |        |       | |
+| Wide&Deep |            |                |         |        |       ||
+| PNN       |            |                |         |        |       ||
+| DeepCross |            |                |         |        |       ||
+|   NFM     |            |                |         |        |       ||
+|   AFM     |            |                |         |        |       ||
+|   DeepFM  |            |                |         |        |       ||
+|    DCN    |            |                |         |        |       ||
+|  xDeepFM  |            |                |         |        |       ||
+|  DIN      |            |                |         |        |       ||
+|  AutoInt+ |     |          |         |                          |       ||
+|  FiBiNet  |     |          |         |                          |       ||
+|    DIEN   |     |          |         |                          |       ||
+|    AFN+   |     |          |         |                          |       ||
 
 ### Avazu
 

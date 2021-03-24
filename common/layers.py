@@ -9,6 +9,7 @@ class SparseFeatureLinear(torch.nn.Module):
 
         # call dataset.get_field_info() to get field_info
         self.input_dims = {}
+        self.output_dim = output_dim
         model_dict = {}
         for ftype in field_info:
             if ftype == 'continuous':
@@ -86,6 +87,7 @@ class FactorizationMachineLayer(torch.nn.Module):
                 raise ValueError("Invalid field type {} detected!".format(ftype))
         
             self.input_dims[ftype] = dims
+            self.emb_dim = emb_dim
         self.layer = torch.nn.ModuleDict(model_dict)
     
     def forward(self, data):
@@ -110,3 +112,27 @@ class FactorizationMachineLayer(torch.nn.Module):
             interaction = torch.sum(interaction_mat) * 0.5
             res.append(interaction.unsqueeze(0))
         return torch.cat(res, dim=0).unsqueeze(dim=1) # (N, 1)
+
+
+class InputLayer(torch.nn.Module):
+    def __init__(self, field_info):
+        super(InputLayer, self).__init__()
+
+        # call dataset.get_field_info() to get field_info
+        self.input_dims = {}
+        model_dict = {}
+        for ftype in field_info:
+            if ftype == 'continuous':
+                dims = field_info[ftype]
+                model_dict[ftype] = torch.nn.Identity() 
+            elif ftype == 'category':
+                dims = field_info[ftype][-1]
+                model_dict[ftype] = torch.nn.Embedding(
+                    num_embeddings=dims,
+                    embedding_dim=emb_dim
+                )       
+            else:
+                raise ValueError("Invalid field type {} detected!".format(ftype))
+        
+            self.input_dims[ftype] = dims
+        self.layer = torch.nn.ModuleDict(model_dict)
