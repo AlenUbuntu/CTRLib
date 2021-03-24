@@ -10,7 +10,6 @@ class DatasetCatalog(object):
             raise RuntimeError("Dataset not available: {}".format(name))
 
         data_dir = cfg.DATASET.DIR 
-        fold = cfg.DATASET.FOLD
         cache_path = cfg.DATASET.CACHE_PATH 
         rebuild_cache = cfg.DATASET.REBUILD_CACHE 
         
@@ -18,6 +17,5 @@ class DatasetCatalog(object):
             data_dir=data_dir,
             cache_path=cache_path,
             rebuild_cache=rebuild_cache,
-            fold=fold,
             split=split,
         )

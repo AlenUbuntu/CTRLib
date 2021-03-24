@@ -22,7 +22,29 @@
 
 
 
+## Experiment
+### Dataset
+| Dataset | Positive | Negative| Total | Imbalance Ratio|
+| :------:| :------: | :------:| :------:| :------:|
+| Criteo |  29,040 | 970,960 | 1,000,000| 33.44 |
+
+### Criteo
+|   Method  | AUC | Log Loss |
+|:---------:|:---:|:--------:|
+|     LR    |  0.74896 &pm; 0.00018 |     0.33974 &pm; 0.00114     |
+|     FM    |  0.75236 &pm; 0.00058   |   0.27502 &pm; 0.00329       |
+| DeepCross |     |          |
+| Wide&Deep |     |          |
+|   DeepFM  |     |          |
+|    DCN    |     |          |
+|  xDeepFM  |     |          |
+|  AutoInt+ |     |          |
+|  FiBiNet  |     |          |
+|    AFN+   |     |          |
+
+### Avazu
+
 
 ## Future Work
 
-* Support multi-value fields
+* Support imbalance learning strategies other than re-sampling

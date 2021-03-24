@@ -21,7 +21,7 @@ def build_dataset(cfg, name, dataset_catalog, split):
         cfg=cfg,
         cache_path=data_config['cache_path'] 
     )
-    dataset.set_split_fold(data_config['split'], data_config['fold'])
+    dataset.set_split(data_config['split'])
     return dataset 
 
 
@@ -30,10 +30,16 @@ def make_data_sampler(cfg, dataset, shuffle):
     label_weights = [1./c for c in label_counts]
     sample_weights = dataset.get_sample_weights(label_weights)
     if shuffle:
-        return torch.utils.data.WeightedRandomSampler(
-            weights=sample_weights, 
-            num_samples=cfg.DATALOADER.BATCH_SIZE,
-            replacement=False)
+        if cfg.DATASET.IMB_STRATEGY == 'resample':
+            return torch.utils.data.WeightedRandomSampler(
+                weights=sample_weights, 
+                num_samples=cfg.DATALOADER.BATCH_SIZE * min(cfg.DATALOADER.NUM_BATCH, len(sample_weights)//cfg.DATALOADER.BATCH_SIZE),
+                replacement=False)
+        if cfg.DATASET.IMB_STRATEGY == '':
+            return torch.utils.data.RandomSampler(
+                dataset,
+                replacement=False,
+            )
     else:
         return torch.utils.data.sampler.SequentialSampler(dataset)
 
@@ -71,4 +77,4 @@ def make_dataloader(cfg, split):
             drop_last=False
         )
 
-    return dataloader 
+    return dataloader, dataset.get_field_info() 

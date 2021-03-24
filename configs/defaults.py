@@ -11,6 +11,7 @@ _C.DEVICE = 'cuda:0'
 _C.WEIGHT = ''
 _C.OUTPUT_DIR = '.'
 _C.PATHS_CATALOG = os.path.join(os.path.dirname(__file__), "dataset_catalog.py")
+_C.MODEL_NAME = 'lr'
 
 # ------------------------------
 # DATASET CONFIGURATION
@@ -21,12 +22,12 @@ _C.DATASET.CONFIG_DIR = '/home/alan/Documents/CTRLib/configs/criteo'
 _C.DATASET.SCHEMA_CONF_FILE = 'schema.yaml'
 _C.DATASET.FIELD_CONF_FILE = 'field.yaml'
 _C.DATASET.NAME = 'Criteo'
-_C.DATASET.N_FOLDS = 10
-_C.DATASET.FOLD = 0
+_C.DATASET.TRAIN_VALID_TEST = (0.7, 0.1, 0.2)
 _C.DATASET.CACHE_PATH = './criteo'
 _C.DATASET.REBUILD_CACHE = False 
 _C.DATASET.MAX_RECORDS_TO_READ = int(1e7)
 _C.DATASET.LABEL_COUNTS = (970960, 29040)  # we compute label weights as 1./label_count for label 0 and label 1 respectively
+_C.DATASET.IMB_STRATEGY = 'resample'  # can be 'resample', 'focal', '' (no strategy, valid for balanced dataset)
 
 # ------------------------------
 # DATALOADER
@@ -47,8 +48,7 @@ _C.DATALOADER.NUM_BATCH = 1000
 _C.OPTIMIZER = CN()
 
 _C.OPTIMIZER.NAME = 'adam'
-_C.OPTIMIZER.FE_LR = 1e-3  # learning rate for feature extractor
-_C.OPTIMIZER.BASE_LR = 1e-2  # learning rate for metric layers
+_C.OPTIMIZER.LR = 1e-3  # learning rate for feature extractor
 
 _C.OPTIMIZER.MAX_EPOCH = 20  # maximum epochs
 _C.OPTIMIZER.MOMENTUM = 0.9
@@ -63,3 +63,12 @@ _C.OPTIMIZER.WARMUP_FACTOR = 1.0 / 3
 _C.OPTIMIZER.WARMUP_ITERS = 500
 _C.OPTIMIZER.WARMUP_METHOD = 'linear'
 
+_C.OPTIMIZER.LR_SCHEDULER = 'cosine_annealing_lr'
+_C.OPTIMIZER.STEP_SIZE = 10
+
+# ------------------------------
+# Factorization Machine
+# ------------------------------
+_C.FM = CN()
+
+_C.FM.LATENT_DIM = 512

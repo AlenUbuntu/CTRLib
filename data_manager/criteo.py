@@ -16,6 +16,7 @@ from data_manager.read_conf import *
 from data_manager.feature_columns import categorical_column_with_hash_bucket, categorical_column_with_identity, categorical_column_with_vocabulary_file, numeric_column
 
 
+# {1: 6286525, 0: 189555458}
 def analyze_criteo(path_to_data_file, max_records_to_read=int(1e7), min_frequency=10):
     dir_idx = path_to_data_file.rfind('/')
     if dir_idx == -1:
@@ -144,6 +145,8 @@ def get_numeric_transform(transform, *args):
         f = lambda x: (x-args[0])/(args[1]-args[0])
     elif transform == 'log':
         f = lambda x: np.log2(x) if x >= 1 else 0. # x >= 1
+    elif transform == 'log_square':
+        f = lambda x: np.floor(np.log2(x)**2) if x > 2 else 1
     elif transform == 'standard':
         f = lambda x: (x-args[0])/args[1]
     else:
@@ -154,13 +157,11 @@ def get_numeric_transform(transform, *args):
 
 def build_criteo(path_to_data_file, cache_path='./criteo', max_records_to_read=int(1e7)):
     with open(path_to_data_file, 'r') as f:
-        pbar = tqdm(f, mininterval=1, smoothing=0.1)
-        pbar.set_description('Create Criteo dataset cache: Setup LMDB Database!')
-
         labels = []
         index = 0
+        store_index = 0
         with lmdb.open(cache_path, map_size=int(1e11)) as env:
-            for line in pbar:
+            for line in f:
                 values = line.rstrip('\n').split('\t')
 
                 if len(values) != 39 + 1:
@@ -170,17 +171,20 @@ def build_criteo(path_to_data_file, cache_path='./criteo', max_records_to_read=i
                 byte_code = line.encode('utf-8')
 
                 with env.begin(write=True) as txn:
-                    txn.put(struct.pack('>I', index), byte_code)
+                    txn.put(struct.pack('>I', store_index), byte_code)
 
                 index += 1
+                store_index += 1
+                print("Create Criteo dataset cache: Setup LMDB Database {}/{}".format(store_index, max_records_to_read), end='\r')
 
-                if index == max_records_to_read:
+                if store_index == max_records_to_read:
                     break 
             labels = np.array(labels, dtype=np.uint32)
             with env.begin(write=True) as txn:
                 txn.put(b'Labels', labels.tobytes())
 
         print("Create Criteo dataset cache: Done!")
+        print(Counter(labels))
 
 
 class CriteoDataset(torch.utils.data.Dataset):
@@ -191,7 +195,6 @@ class CriteoDataset(torch.utils.data.Dataset):
         schema_conf_file_path = os.path.join(config_dir, cfg.DATASET.SCHEMA_CONF_FILE)
         field_conf_file_path = os.path.join(config_dir, cfg.DATASET.FIELD_CONF_FILE)
         schema_conf = read_schema(schema_conf_file_path)  # {feature id: field_name}
-        # self.schema_conf = {v:k for k, v in schema_conf.items()} # {field_name -> feature id}
         self.schema_conf = {} # {field_name -> [feature_id1, feature_id2, ...]}
         for feature_id, field_name in schema_conf.items():
             if field_name not in self.schema_conf:
@@ -199,7 +202,7 @@ class CriteoDataset(torch.utils.data.Dataset):
             self.schema_conf[field_name].append(feature_id)
         
         self.field_conf = read_field_conf(data_dir, schema_conf_file_path, field_conf_file_path)  # field name -> conf
-        self.n_folds = cfg.DATASET.N_FOLDS
+        self.train_valid_test = cfg.DATASET.TRAIN_VALID_TEST
 
         # build feature columns
         self.field_columns = {} # field name -> column
@@ -212,27 +215,33 @@ class CriteoDataset(torch.utils.data.Dataset):
             missing_value = conf['missing_value']
             feat_stat = conf['feat_stat']
 
-            print('\n{}\t{}'.format(field_name, type_), end='')
             if type_ == 'category':
+                emb_dim = conf['emb_dim']
+                aggregate = conf['aggregate']
+
                 if trans_ == 'hash_bucket':
-                    column = categorical_column_with_hash_bucket(field_name, params_, missing_strategy, missing_value, os.path.join(data_dir, feat_stat))
+                    column = categorical_column_with_hash_bucket(field_name, params_, missing_strategy, missing_value, os.path.join(data_dir, feat_stat), emb_dim, aggregate)
                 if trans_ == 'identity':
-                    column = categorical_column_with_identity(field_name, params_, missing_strategy, missing_value, os.path.join(data_dir, feat_stat))
+                    column = categorical_column_with_identity(field_name, params_, missing_strategy, missing_value, os.path.join(data_dir, feat_stat), emb_dim, aggregate)
                 if trans_ == 'vocab':
-                    column = categorical_column_with_vocabulary_file(field_name, os.path.join(data_dir, params_), missing_strategy, missing_value, os.path.join(data_dir, feat_stat))
+                    column = categorical_column_with_vocabulary_file(field_name, os.path.join(data_dir, params_), missing_strategy, missing_value, os.path.join(data_dir, feat_stat), 
+                    emb_dim, aggregate)
             else:
                 normalization, boundaries = params_['normalization'], params_['boundaries']
                 if trans_ == 'min_max':
                     min_, max_ = normalization
                     f = get_numeric_transform(trans_, min_, max_)
-                    column = numeric_column(field_name, missing_strategy, missing_value, os.path.join(data_dir, feat_stat), f)
+                    column = numeric_column(field_name, missing_strategy, missing_value, os.path.join(data_dir, feat_stat), f, boundaries)
                 if trans_ == 'standard':
                     mean, std = normalization
                     f = get_numeric_transform(trans_, mean, std)
-                    column = numeric_column(field_name, missing_strategy, missing_value, os.path.join(data_dir, feat_stat), f)
+                    column = numeric_column(field_name, missing_strategy, missing_value, os.path.join(data_dir, feat_stat), f, boundaries)
                 if trans_ == 'log':
                     f = get_numeric_transform(trans_)
-                    column = numeric_column(field_name, missing_strategy, missing_value, os.path.join(data_dir, feat_stat), f)
+                    column = numeric_column(field_name, missing_strategy, missing_value, os.path.join(data_dir, feat_stat), f, boundaries)
+                if trans_ == 'log_square':
+                    f = get_numeric_transform(trans_)
+                    column = numeric_column(field_name, missing_strategy, missing_value, os.path.join(data_dir, feat_stat), f, boundaries)
             
             self.field_columns[field_name] = column 
         
@@ -241,25 +250,25 @@ class CriteoDataset(torch.utils.data.Dataset):
             self.database_size = txn.stat()['entries']-1
             self.labels = np.frombuffer(txn.get(b'Labels'), dtype=np.uint32)
 
-        self.fold_size = self.database_size // self.n_folds
         self.idx = {}
     
-    def set_split_fold(self, split='train', fold=0):
-        assert fold >= 0 and fold < self.n_folds, 'Invalid setting of fold: {} as the total number of folds is {}'.format(fold, self.n_folds)
-
+    def set_split(self, split='train'):
         idx = list(range(self.database_size))
-        validation_start_idx = fold * self.fold_size 
-        validation_end_idx = min(validation_start_idx + self.fold_size, self.database_size)
-        validation_idx = idx[validation_start_idx:validation_end_idx]
-        train_test_idx = idx[:validation_start_idx] + idx[validation_end_idx:]
 
-        test_idx = train_test_idx[:2 * self.fold_size]
-        train_idx = train_test_idx[2 * self.fold_size:]
+        train_ratio, valid_ratio, test_ratio = self.train_valid_test
+        test_size = int(self.database_size * test_ratio)
+        test_start_idx = self.database_size - test_size 
+        valid_size = int(self.database_size * valid_ratio)
+        valid_start_idx = test_start_idx - valid_size
+
+        train_idx = idx[:valid_start_idx]
+        valid_idx = idx[valid_start_idx:test_start_idx]
+        test_idx = idx[test_start_idx:]
 
         if split.lower() == 'train':
             self.idx = dict(zip(range(len(train_idx)), train_idx))
         elif split.lower() == 'valid':
-            self.idx = dict(zip(range(len(validation_idx)), validation_idx))
+            self.idx = dict(zip(range(len(valid_idx)), valid_idx))
         else:
             self.idx = dict(zip(range(len(test_idx)), test_idx))
 
@@ -281,7 +290,6 @@ class CriteoDataset(torch.utils.data.Dataset):
 
         for field_name in self.schema_conf:
             column = self.field_columns[field_name]
-
             if column.type() == 'category':
                 indicator = torch.zeros(column.dim(), dtype=torch.long)
                 valid_count = 0
@@ -296,7 +304,9 @@ class CriteoDataset(torch.utils.data.Dataset):
                     index = column.transform_input_value('')
                     if index >= 0 and index < column.dim():
                         indicator[index] = 1
-                data[field_name] = indicator
+                if 'category' not in data:
+                    data['category'] = []
+                data['category'].append(indicator)
 
             elif column.type() == 'continuous':
                 assert len(self.schema_conf[field_name])==1, 'Continuous features must be itself an individual field! '
@@ -305,8 +315,18 @@ class CriteoDataset(torch.utils.data.Dataset):
                 val = feats[fid-1]
                 if val != '':
                     val = float(val)
-                data[field_name] = torch.tensor([column.transform_input_value(val)])
+                if column.dim() == 1:
+                    if "continuous" not in data:
+                        data['continuous'] = []
+                    data['continuous'].append(torch.tensor([column.transform_input_value(val)]))
+                else:
+                    indicator = torch.zeros(column.dim(), dtype=torch.long)
+                    indicator[column.transform_input_value(val)] = 1
+                    data['category'].append(indicator)
 
+        for key in data:
+            data[key] = torch.cat(data[key], dim=0)
+        
         data['label'] = torch.tensor([label])
         return data
     
@@ -319,63 +339,84 @@ class CriteoDataset(torch.utils.data.Dataset):
         with self.env.begin(write=False) as txn:
             line = txn.get(struct.pack('>I', db_idx)).decode('utf-8')
             data = self._transform(line)
-        return data
+        return data  # {'field_name': xxx, 'label': xxx}
+    
+    def get_field_info(self):
+        field_info = {
+            'category': []
+        }
+
+        cont_dim = 0
+        disc_start_idx = 0
+        for field_name in self.schema_conf:
+            column = self.field_columns[field_name]
+            dim = column.dim()
+            if dim == 1:
+                cont_dim += 1
+            else:
+                field_info['category'].append(disc_start_idx)
+                disc_start_idx += dim 
+        field_info['category'].append(disc_start_idx)
+        field_info['continuous'] = cont_dim
+        
+        return field_info
 
 if __name__ == '__main__':
     # analyze_criteo(
     #     path_to_data_file='/home/alan/Downloads/recommendation/Criteo/day_0',
     #     max_records_to_read=int(1e6)
     # )
-    # build_criteo(
-    #     path_to_data_file='/home/alan/Downloads/recommendation/Criteo/day_0',
-    #     max_records_to_read=int(1e6)
+    build_criteo(
+        path_to_data_file='/home/alan/Downloads/recommendation/Criteo/day_0',
+        max_records_to_read=int(1e6),
+        cache_path='/home/alan/Downloads/recommendation/Criteo/criteo',
+    )
+
+    # from configs import cfg 
+    # criteo = CriteoDataset(
+    #     cfg
+    # )
+    # criteo.set_split_fold(
+    #     split='test',
+    #     fold=5
     # )
 
-    from configs import cfg 
-    criteo = CriteoDataset(
-        cfg
-    )
-    criteo.set_split_fold(
-        split='test',
-        fold=5
-    )
+    # features_map = {}
+    # for i in range(39):
+    #     if i < 13:
+    #         with open('/home/alan/Downloads/recommendation/Criteo/feature_{}_stat.json'.format(i)) as f:
+    #             features_map[i] = json.load(f)
+    #     else:
+    #         d = {}
+    #         with open('/home/alan/Downloads/recommendation/Criteo/feat_{}.txt'.format(i)) as f:
+    #             for j, line in enumerate(f):
+    #                 cat = line.strip().split('\t')[0]
+    #                 d[cat] = j 
 
-    features_map = {}
-    for i in range(39):
-        if i < 13:
-            with open('/home/alan/Downloads/recommendation/Criteo/feature_{}_stat.json'.format(i)) as f:
-                features_map[i] = json.load(f)
-        else:
-            d = {}
-            with open('/home/alan/Downloads/recommendation/Criteo/feat_{}.txt'.format(i)) as f:
-                for j, line in enumerate(f):
-                    cat = line.strip().split('\t')[0]
-                    d[cat] = j 
+    #         d['#'] = len(d)
+    #         features_map[i] = d 
 
-            d['#'] = len(d)
-            features_map[i] = d 
-
-    f = get_numeric_transform('log')
-    for i in range(len(criteo)):
-        print("{}/{}".format(i+1, len(criteo)), end='\r')
-        data, line = criteo[i]
+    # f = get_numeric_transform('log')
+    # for i in range(len(criteo)):
+    #     print("{}/{}".format(i+1, len(criteo)), end='\r')
+    #     data, line = criteo[i]
         
-        vals = line.strip().split('\t')
+    #     vals = line.strip().split('\t')
 
-        for j, each in enumerate(vals[1:]):
-            if j < 13:
-                if each:
-                    assert f(float(each)) == data['field_{}'.format(j+1)], '{}, {}'.format(f(float(each)), data['field_{}'.format(j+1)])
-                else:
-                    assert f(float(features_map[j]['most_freq'])) == data['field_{}'.format(j+1)], '{}, {}'.format(f(float(each)), data['field_{}'.format(j+1)])
-            else:
-                try:
-                    if each in features_map[j]:
-                        assert features_map[j][each] == torch.nonzero(data['field_{}'.format(j+1)], as_tuple=False), '{}, {}'.format(features_map[j][each], torch.nonzero(data['field_{}'.format(j+1)],as_tuple=False))
-                    else:
-                        assert features_map[j]['#'] == torch.nonzero(data['field_{}'.format(j+1)], as_tuple=False), '{}, {}'.format(features_map[j]['#'], torch.nonzero(data['field_{}'.format(j+1)],as_tuple=False))
-                except RuntimeError:
-                    print(vals)
-                    print(j, torch.nonzero(data['field_{}'.format(j+1)], as_tuple=False), vals[j], features_map[j]['#'])
-                    exit()
-    print("Test completes successfully!")
+    #     for j, each in enumerate(vals[1:]):
+    #         if j < 13:
+    #             if each:
+    #                 assert f(float(each)) == data['field_{}'.format(j+1)], '{}, {}'.format(f(float(each)), data['field_{}'.format(j+1)])
+    #             else:
+    #                 assert f(float(features_map[j]['most_freq'])) == data['field_{}'.format(j+1)], '{}, {}'.format(f(float(each)), data['field_{}'.format(j+1)])
+    #         else:
+    #             try:
+    #                 if each in features_map[j]:
+    #                     assert features_map[j][each] == torch.nonzero(data['field_{}'.format(j+1)], as_tuple=False), '{}, {}'.format(features_map[j][each], torch.nonzero(data['field_{}'.format(j+1)],as_tuple=False))
+    #                 else:
+    #                     assert features_map[j]['#'] == torch.nonzero(data['field_{}'.format(j+1)], as_tuple=False), '{}, {}'.format(features_map[j]['#'], torch.nonzero(data['field_{}'.format(j+1)],as_tuple=False))
+    #             except RuntimeError:
+    #                 print(vals)
+    #                 print(j, torch.nonzero(data['field_{}'.format(j+1)], as_tuple=False), vals[j], features_map[j]['#'])
+    #                 exit()
+    # print("Test completes successfully!")

@@ -16,10 +16,11 @@
 #           'a' 1000        (path to vocabulary file where each line is in the format of 'Category\tCount')
 #           15              (num_buckets  for `identity`)
 #    (2) type: continuous
-#         transform: `min_max`, `log`, `standard` normalization for normalizer_fn in
+#         transform: `min_max`, `log`, `standard`, `log_square` normalization for normalizer_fn in
 #                    NumericColumn, set empty to not do normalization.
 #           `min_max`    ==> x = (x-min) / (max-min);
-#           `log`        ==> x = log(x), all field values must >= 1
+#           `log`        ==> x = log(x), if x > 2 else 0
+#           `log_square` ==> x = log(x)**2, if x > 2 else 0
 #           `standard`   ==> x = (x-mean) / std
 #
 #         parameter:
@@ -71,6 +72,7 @@ field_1:
   missing_strategy: most-frequent
   missing_value: ''
   feat_stat: 'feature_0_stat.json'
+  emb_dim: -1
 
 field_2:
   type: continuous
@@ -81,116 +83,128 @@ field_2:
   missing_strategy: most-frequent
   missing_value: ''
   feat_stat: 'feature_1_stat.json'
+  emb_dim: -1
 
 field_3:
   type: continuous
-  transform: log 
+  transform: log
   parameter:
     normalization: []
     boundaries: []
   missing_strategy: most-frequent
   missing_value: ''
   feat_stat: 'feature_2_stat.json'
+  emb_dim: -1
 
 field_4:
   type: continuous
-  transform: log 
+  transform: log
   parameter:
     normalization: []
     boundaries: []
   missing_strategy: most-frequent
   missing_value: ''
   feat_stat: 'feature_3_stat.json'
+  emb_dim: -1
 
 field_5:
   type: continuous
-  transform: log 
+  transform: log
   parameter:
     normalization: []
     boundaries: []
   missing_strategy: most-frequent
   missing_value: ''
   feat_stat: 'feature_4_stat.json'
+  emb_dim: -1
 
 field_6:
   type: continuous
-  transform: log 
+  transform: log
   parameter:
     normalization: []
     boundaries: []
   missing_strategy: most-frequent
   missing_value: ''
   feat_stat: 'feature_5_stat.json'
+  emb_dim: -1
 
 field_7:
   type: continuous
-  transform: log 
+  transform: log
   parameter:
     normalization: []
     boundaries: []
   missing_strategy: most-frequent
   missing_value: ''
   feat_stat: 'feature_6_stat.json'
+  emb_dim: -1
 
 field_8:
   type: continuous
-  transform: log 
+  transform: log
   parameter:
     normalization: []
     boundaries: []
   missing_strategy: most-frequent
   missing_value: ''
   feat_stat: 'feature_7_stat.json'
+  emb_dim: -1
 
 field_9:
   type: continuous
-  transform: log 
+  transform: log
   parameter:
     normalization: []
     boundaries: []
   missing_strategy: most-frequent
   missing_value: ''
   feat_stat: 'feature_8_stat.json'
+  emb_dim: -1
 
 field_10:
   type: continuous
-  transform: log 
+  transform: log
   parameter:
     normalization: []
     boundaries: []
   missing_strategy: most-frequent
   missing_value: ''
   feat_stat: 'feature_9_stat.json'
+  emb_dim: -1
 
 field_11:
   type: continuous
-  transform: log 
+  transform: log
   parameter:
     normalization: []
     boundaries: []
   missing_strategy: most-frequent
   missing_value: ''
   feat_stat: 'feature_10_stat.json'
+  emb_dim: -1
 
 field_12:
   type: continuous
-  transform: log 
+  transform: log
   parameter:
     normalization: []
     boundaries: []
   missing_strategy: most-frequent
   missing_value: ''
   feat_stat: 'feature_11_stat.json'
+  emb_dim: -1
 
 field_13:
   type: continuous
-  transform: log 
+  transform: log
   parameter:
     normalization: []
     boundaries: []
   missing_strategy: most-frequent
   missing_value: ''
   feat_stat: 'feature_12_stat.json'
+  emb_dim: -1
 
 field_14:
   type: category
@@ -199,6 +213,8 @@ field_14:
   missing_strategy: special-token
   missing_value: ''
   feat_stat: 'feature_13_stat.json'
+  emb_dim: 256
+  aggregate: 'sum'
 
 field_15:
   type: category
@@ -207,6 +223,8 @@ field_15:
   missing_strategy: special-token
   missing_value: ''
   feat_stat: 'feature_14_stat.json'
+  emb_dim: 256
+  aggregate: 'sum'
 
 field_16:
   type: category
@@ -215,6 +233,8 @@ field_16:
   missing_strategy: special-token
   missing_value: ''
   feat_stat: 'feature_15_stat.json'
+  emb_dim: 256
+  aggregate: 'sum'
 
 field_17:
   type: category
@@ -223,6 +243,8 @@ field_17:
   missing_strategy: special-token
   missing_value: ''
   feat_stat: 'feature_16_stat.json'
+  emb_dim: 256
+  aggregate: 'sum'
 
 field_18:
   type: category
@@ -231,6 +253,8 @@ field_18:
   missing_strategy: special-token
   missing_value: ''
   feat_stat: 'feature_17_stat.json'
+  emb_dim: 256
+  aggregate: 'sum'
 
 field_19:
   type: category
@@ -239,6 +263,8 @@ field_19:
   missing_strategy: special-token
   missing_value: ''
   feat_stat: 'feature_18_stat.json'
+  emb_dim: 256
+  aggregate: 'sum'
 
 field_20:
   type: category
@@ -247,6 +273,8 @@ field_20:
   missing_strategy: special-token
   missing_value: ''
   feat_stat: 'feature_19_stat.json'
+  emb_dim: 256
+  aggregate: 'sum'
 
 field_21:
   type: category
@@ -255,6 +283,8 @@ field_21:
   missing_strategy: special-token
   missing_value: ''
   feat_stat: 'feature_20_stat.json'
+  emb_dim: 256
+  aggregate: 'sum'
 
 field_22:
   type: category
@@ -263,6 +293,8 @@ field_22:
   missing_strategy: special-token
   missing_value: ''
   feat_stat: 'feature_21_stat.json'
+  emb_dim: 256
+  aggregate: 'sum'
 
 field_23:
   type: category
@@ -271,6 +303,8 @@ field_23:
   missing_strategy: special-token
   missing_value: ''
   feat_stat: 'feature_22_stat.json'
+  emb_dim: 256
+  aggregate: 'sum'
 
 field_24:
   type: category
@@ -279,6 +313,8 @@ field_24:
   missing_strategy: special-token
   missing_value: ''
   feat_stat: 'feature_23_stat.json'
+  emb_dim: 256
+  aggregate: 'sum'
 
 field_25:
   type: category
@@ -287,6 +323,8 @@ field_25:
   missing_strategy: special-token
   missing_value: ''
   feat_stat: 'feature_24_stat.json'
+  emb_dim: 256
+  aggregate: 'sum'
 
 field_26:
   type: category
@@ -295,6 +333,8 @@ field_26:
   missing_strategy: special-token
   missing_value: ''
   feat_stat: 'feature_25_stat.json'
+  emb_dim: 256
+  aggregate: 'sum'
 
 field_27:
   type: category
@@ -303,6 +343,8 @@ field_27:
   missing_strategy: special-token
   missing_value: ''
   feat_stat: 'feature_26_stat.json'
+  emb_dim: 256
+  aggregate: 'sum'
 
 field_28:
   type: category
@@ -311,6 +353,8 @@ field_28:
   missing_strategy: special-token
   missing_value: ''
   feat_stat: 'feature_27_stat.json'
+  emb_dim: 256
+  aggregate: 'sum'
 
 field_29:
   type: category
@@ -319,6 +363,8 @@ field_29:
   missing_strategy: special-token
   missing_value: ''
   feat_stat: 'feature_28_stat.json'
+  emb_dim: 256
+  aggregate: 'sum'
 
 field_30:
   type: category
@@ -327,6 +373,8 @@ field_30:
   missing_strategy: special-token
   missing_value: ''
   feat_stat: 'feature_29_stat.json'
+  emb_dim: 256
+  aggregate: 'sum'
 
 field_31:
   type: category
@@ -335,6 +383,8 @@ field_31:
   missing_strategy: special-token
   missing_value: ''
   feat_stat: 'feature_30_stat.json'
+  emb_dim: 256
+  aggregate: 'sum'
 
 field_32:
   type: category
@@ -343,6 +393,8 @@ field_32:
   missing_strategy: special-token
   missing_value: ''
   feat_stat: 'feature_31_stat.json'
+  emb_dim: 256
+  aggregate: 'sum'
 
 field_33:
   type: category
@@ -351,6 +403,8 @@ field_33:
   missing_strategy: special-token
   missing_value: ''
   feat_stat: 'feature_32_stat.json'
+  emb_dim: 256
+  aggregate: 'sum'
 
 field_34:
   type: category
@@ -359,6 +413,8 @@ field_34:
   missing_strategy: special-token
   missing_value: ''
   feat_stat: 'feature_33_stat.json'
+  emb_dim: 256
+  aggregate: 'sum'
 
 field_35:
   type: category
@@ -367,6 +423,8 @@ field_35:
   missing_strategy: special-token
   missing_value: ''
   feat_stat: 'feature_34_stat.json'
+  emb_dim: 256
+  aggregate: 'sum'
 
 field_36:
   type: category
@@ -375,6 +433,8 @@ field_36:
   missing_strategy: special-token
   missing_value: ''
   feat_stat: 'feature_35_stat.json'
+  emb_dim: 256
+  aggregate: 'sum'
 
 field_37:
   type: category
@@ -383,6 +443,8 @@ field_37:
   missing_strategy: special-token
   missing_value: ''
   feat_stat: 'feature_36_stat.json'
+  emb_dim: 256
+  aggregate: 'sum'
 
 field_38:
   type: category
@@ -391,6 +453,8 @@ field_38:
   missing_strategy: special-token
   missing_value: ''
   feat_stat: 'feature_37_stat.json'
+  emb_dim: 256
+  aggregate: 'sum'
 
 field_39:
   type: category
@@ -399,3 +463,5 @@ field_39:
   missing_strategy: special-token
   missing_value: ''
   feat_stat: 'feature_38_stat.json'
+  emb_dim: 256
+  aggregate: 'sum'
