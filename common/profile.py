@@ -6,6 +6,7 @@ from common.efficiency_utils import *
 
 from models.lr import *
 from models.fm import *
+from models.dnn import *
 from common.layers import *
 
 def prRed(skk): print("\033[91m{}\033[00m".format(skk))
@@ -57,9 +58,13 @@ register_hooks = {
     nn.UpsamplingNearest2d: count_upsample,
 
     torch.nn.modules.sparse.Embedding: zero_ops,
+    InputLayer: zero_ops,
     SparseFeatureLinear: count_feature_linear,
+    MultiLayerPerceptron: count_mlp,
+
     LogisticRegressionModel: count_lr,
     FactorizationMachineModel: count_fm,
+    DNNYouTubeModel: count_dnn,
 }
 
 

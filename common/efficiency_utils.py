@@ -23,7 +23,7 @@ def count_parameters(m, x, y):
 
 
 def zero_ops(m, x, y):
-    m.total_ops += torch.DoubleTensor([int(0)])
+    return float(int(0))
 
 
 def count_convNd(m: _ConvNd, x: torch.Tensor, y: torch.Tensor):
@@ -35,18 +35,20 @@ def count_convNd(m: _ConvNd, x: torch.Tensor, y: torch.Tensor):
     # N x Cout x H x W x  (Cin x Kw x Kh + bias)
     total_ops = y.nelement() * (m.in_channels // m.groups * kernel_ops + bias_ops)
 
-    m.total_ops += torch.DoubleTensor([int(total_ops)])
+    return float(int(total_ops))
 
 
 def count_bn(m, x: torch.Tensor, y: torch.Tensor):
     # x = x[0]
 
     nelements = x.numel()
+    total_ops = nelements
+
     if not m.training:
         # subtract, divide, gamma, beta
         total_ops = 2 * nelements
 
-    m.total_ops += torch.DoubleTensor([int(total_ops)])
+    return float(int(total_ops))
 
 
 def count_relu(m, x: torch.Tensor, y: torch.Tensor):
@@ -54,7 +56,7 @@ def count_relu(m, x: torch.Tensor, y: torch.Tensor):
 
     nelements = x.numel()
 
-    m.total_ops += torch.DoubleTensor([int(nelements)])
+    return float(int(nelements))
 
 
 def count_softmax(m, x: torch.Tensor, y: torch.Tensor):
@@ -67,7 +69,7 @@ def count_softmax(m, x: torch.Tensor, y: torch.Tensor):
     total_div = nfeatures
     total_ops = batch_size * (total_exp + total_add + total_div)
 
-    m.total_ops += torch.DoubleTensor([int(total_ops)])
+    return float(int(total_ops))
 
 
 def count_avgpool(m, x: torch.Tensor, y: torch.Tensor):
@@ -78,7 +80,7 @@ def count_avgpool(m, x: torch.Tensor, y: torch.Tensor):
     num_elements = y.numel()
     total_ops = kernel_ops * num_elements
 
-    m.total_ops += torch.DoubleTensor([int(total_ops)])
+    return float(int(total_ops))
 
 
 def count_adap_avgpool(m, x: torch.Tensor, y: torch.Tensor):
@@ -89,7 +91,7 @@ def count_adap_avgpool(m, x: torch.Tensor, y: torch.Tensor):
     num_elements = y.numel()
     total_ops = kernel_ops * num_elements
 
-    m.total_ops += torch.DoubleTensor([int(total_ops)])
+    return float(int(total_ops))
 
 
 # TODO: verify the accuracy
@@ -118,7 +120,7 @@ def count_upsample(m, x, y):
         # can viewed as 2 bilinear + 1 linear
         total_ops = y.nelement() * (13 * 2 + 5)
 
-    m.total_ops += torch.DoubleTensor([int(total_ops)])
+    return float(total_ops)
 
 
 def count_linear(m, x, y):
@@ -127,7 +129,7 @@ def count_linear(m, x, y):
     num_elements = y.numel()
     total_ops = total_mul * num_elements
 
-    m.total_ops += torch.DoubleTensor([int(total_ops)])
+    return int(total_ops)
 
 
 def count_feature_linear(m, x, y):
@@ -136,8 +138,8 @@ def count_feature_linear(m, x, y):
     for ftype in m.input_dims:
         if ftype == 'continuous':
             # out = x * weights + self.bias # (N, F, D)
-            # F * D (element-wise multiplication) + F * D (addition)
-            total_ops += m.input_dims[ftype] * m.output_dim * 2
+            # F * D (w * x + bias)
+            total_ops += m.input_dims[ftype] * m.output_dim
             # out.sum(1) (N, D)
             total_ops += m.input_dims[ftype]
         elif ftype == 'category':
@@ -145,7 +147,8 @@ def count_feature_linear(m, x, y):
             # out = weights.sum(0) # (1, D)
             # k_average = x[ftype].view(1, -1).sum(dim=1).item()/len(x[ftype])
             # k * D + k
-            total_ops += (x[ftype].view(1, -1).sum(dim=1).item()/len(x[ftype]) * m.output_dim + x[ftype].view(1, -1).sum(dim=1).item()/len(x[ftype]))
+            k = x[ftype].view(1, -1).sum(dim=1).item()/len(x[ftype])
+            total_ops += (k * m.output_dim + k)
     total_ops += 1 # add continuous and category contributions together
     return total_ops
 
@@ -166,6 +169,25 @@ def count_factorization_machine_layer(m, x, y):
     return total_ops
 
 
+def count_mlp(m, x, y):
+    total_ops = 0
+
+    models = m.children()
+    for each_model in models:
+        for i in range(len(each_model)):
+            layer = each_model[i]
+            model_type = type(layer)
+            if model_type == torch.nn.Linear:
+                total_ops += count_linear(layer, x, y)
+            if model_type == torch.nn.BatchNorm1d:
+                total_ops += count_bn(layer, x, y)
+            if model_type == torch.nn.ReLU:
+                total_ops += zero_ops(layer, x, y)
+            if model_type == torch.nn.Dropout:
+                total_ops += zero_ops(layer, x, y)
+
+    return total_ops
+
 def count_lr(m, x, y):
     return count_feature_linear(m.linear, x, y)
 
@@ -177,5 +199,15 @@ def count_fm(m, x, y):
     total_ops += count_factorization_machine_layer(m.bi_interaction, x, y)
 
     total_ops += 1
+
+    return total_ops
+
+
+def count_dnn(m, x, y):
+    total_ops = 0
+
+    x = m.input(x)
+    x = x[0]
+    total_ops += count_mlp(m.mlp, x, y)
 
     return total_ops

@@ -13,7 +13,7 @@ these columns.
 
 
 class HashedCategoricalColumn(object):
-    def __init__(self, name, hash_bucket_size, missing_strategy, missing_value, feat_stat, embed_dim, aggregate, dtype):
+    def __init__(self, name, hash_bucket_size, missing_strategy, missing_value, feat_stat, dtype):
         super(HashCategoricalColumn, self).__init__()
         self.name = name 
         self.dtype = dtype
@@ -22,8 +22,6 @@ class HashedCategoricalColumn(object):
         self.missing_strategy = missing_strategy
         self.missing_value = missing_value
         self.feat_stat = feat_stat
-        self.embed_dim = embed_dim 
-        self.aggregate = aggregate
     
     def dim(self):
         return self.hash_bucket_size
@@ -76,7 +74,7 @@ class HashedCategoricalColumn(object):
 
 
 class VocabularyFileCategoricalColumn(object):
-    def __init__(self, name, vocabulary_file, vocabulary_size, num_oov_buckets, default_value, missing_strategy, missing_value, feat_stat, embed_dim, aggregate, dtype):
+    def __init__(self, name, vocabulary_file, vocabulary_size, num_oov_buckets, default_value, missing_strategy, missing_value, feat_stat, dtype):
         super(VocabularyFileCategoricalColumn, self).__init__()
         self.name = name 
         self.dtype = dtype
@@ -84,8 +82,6 @@ class VocabularyFileCategoricalColumn(object):
         self.missing_strategy = missing_strategy
         self.missing_value = missing_value
         self.feat_stat = feat_stat
-        self.embed_dim = embed_dim 
-        self.aggregate = aggregate
 
         if num_oov_buckets > 0:
             self.num_oov_buckets = num_oov_buckets
@@ -146,7 +142,7 @@ class VocabularyFileCategoricalColumn(object):
 
 
 class IdentityCategoricalColumn(object):
-    def __init__(self, name, num_buckets, missing_strategy, missing_value, feat_stat, default_value, embed_dim, aggregate, dtype):
+    def __init__(self, name, num_buckets, missing_strategy, missing_value, feat_stat, default_value, dtype):
         super(IdentityCategoricalColumn, self).__init__()
         self.name = name 
         self.dtype = dtype
@@ -154,8 +150,6 @@ class IdentityCategoricalColumn(object):
         self.missing_value = missing_value 
         self.feat_stat = feat_stat
         self.num_buckets = num_buckets
-        self.embed_dim = embed_dim 
-        self.aggregate = aggregate
 
         assert default_value >= 0
         self.default_value = default_value
@@ -243,7 +237,7 @@ class NumericColumn(object):
         else:
             return np.searchsorted(self.boundaries, input_value, side='left')
 
-def categorical_column_with_hash_bucket(name, hash_bucket_size, missing_strategy, missing_value, feat_stat_path, embed_dim, aggregate):
+def categorical_column_with_hash_bucket(name, hash_bucket_size, missing_strategy, missing_value, feat_stat_path):
     """Represents sparse feature where ids are set by hashing.
 
     Use this when your sparse features are in string or integer format, and you
@@ -278,7 +272,7 @@ def categorical_column_with_hash_bucket(name, hash_bucket_size, missing_strategy
     with open(feat_stat_path, 'r') as f:
         feat_stat = json.load(f)
 
-    return HashedCategoricalColumn(name, hash_bucket_size, missing_strategy, missing_value, feat_stat, embed_dim, aggregate, dtype='category')
+    return HashedCategoricalColumn(name, hash_bucket_size, missing_strategy, missing_value, feat_stat, dtype='category')
 
 
 def categorical_column_with_vocabulary_file(
@@ -287,8 +281,6 @@ def categorical_column_with_vocabulary_file(
         missing_strategy,
         missing_value,
         feat_stat_path, 
-        embed_dim,
-        aggregate='sum',
         vocabulary_size=None, 
         default_value=None, 
         num_oov_buckets=0):
@@ -387,12 +379,10 @@ def categorical_column_with_vocabulary_file(
         missing_strategy=missing_strategy,
         missing_value=missing_value,
         feat_stat=feat_stat,
-        embed_dim=embed_dim,
-        aggregate=aggregate,
         dtype='category')
 
 
-def categorical_column_with_identity(name, num_buckets, missing_strategy, missing_value, feat_stat_path, embed_dim, aggregate, default_value=None):
+def categorical_column_with_identity(name, num_buckets, missing_strategy, missing_value, feat_stat_path, default_value=None):
     """A `CategoricalColumn` that returns identity values.
 
     Use this when your inputs are integers in the range `[0, num_buckets)`, and
@@ -446,7 +436,7 @@ def categorical_column_with_identity(name, num_buckets, missing_strategy, missin
 
     return IdentityCategoricalColumn(
         name=name, num_buckets=num_buckets, missing_strategy=missing_strategy, missing_value=missing_value, 
-        feat_stat=feat_stat, default_value=default_value, embed_dim=embed_dim, aggregate=aggregate, dtype='category')
+        feat_stat=feat_stat, default_value=default_value, dtype='category')
 
 def numeric_column(name, missing_strategy, missing_value, feat_stat_path, normalizer_fn=None, boundaries=[]):
     """Represents real valued or numerical features.

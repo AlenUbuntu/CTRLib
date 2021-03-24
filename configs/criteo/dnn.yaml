@@ -1,0 +1,21 @@
+DEVICE: 'cuda:0'
+OUTPUT_DIR: './experiments/'
+MODEL_NAME: 'dnn'
+DATASET:
+  NAME: 'Criteo'
+  CACHE_PATH: '/home/alan/Downloads/recommendation/Criteo/criteo'
+  REBUILD_CACHE: False 
+  LABEL_COUNTS: (970960, 29040)
+  IMB_STRATEGY: 'resample'
+DATALOADER:
+  BATCH_SIZE: 64
+OPTIMIZER:
+  NAME: 'adam'
+  LR: 1e-2
+  MAX_EPOCH: 20
+  LR_SCHEDULER: 'cosine_annealing_lr'
+DNN:
+  LATENT_DIM: 64
+  AGGREGATE: 'sum'
+  HIDDEN_DIMS_FRACTOR: (.1, .1)
+  DROPOUT_PROB: .5

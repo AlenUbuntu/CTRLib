@@ -72,3 +72,13 @@ _C.OPTIMIZER.STEP_SIZE = 10
 _C.FM = CN()
 
 _C.FM.LATENT_DIM = 512
+
+# ------------------------------
+# DNN YouTube
+# ------------------------------
+_C.DNN = CN()
+
+_C.DNN.LATENT_DIM = 512
+_C.DNN.AGGREGATE = 'sum'
+_C.DNN.HIDDEN_DIMS_FRACTOR = (.5, .5, .5)
+_C.DNN.DROPOUT_PROB = 0.5

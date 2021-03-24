@@ -13,6 +13,7 @@ from common.profile import profile
 
 from models.lr import LogisticRegressionModel
 from models.fm import FactorizationMachineModel
+from models.dnn import DNNYouTubeModel
 
 def get_unique_temp_folder(input_temp_folder_path):
     """
@@ -71,6 +72,8 @@ def get_model(cfg, field_info):
         return LogisticRegressionModel(cfg, field_info)
     if name == 'fm':
         return FactorizationMachineModel(cfg, field_info)
+    if name == 'dnn':
+        return DNNYouTubeModel(cfg, field_info)
 
 
 def train(cfg, model, train_loader, valid_loader, save=False):
@@ -205,7 +208,7 @@ def main():
     cfg.merge_from_file(args.config_file)
     cfg.freeze()
 
-    assert cfg.MODEL_NAME in {'lr', 'fm', 'all'}, "Unexpected model: {}, must be one of 'lr', 'all'.".format(args.model)
+    assert cfg.MODEL_NAME in {'lr', 'fm', 'dnn', 'all'}, "Unexpected model: {}, must be one of 'lr', 'all'.".format(args.model)
 
     # # create output dir
     # experiment_dir = get_unique_temp_folder(cfg.OUTPUT_DIR)
@@ -242,12 +245,13 @@ def main():
     # print("* Test AUC: {:.5f} *".format(auc))
     # print("* Test Log Loss: {:.5f} *".format(log_loss))
     # print("*"*20)
-
+    
+    model.eval()
     macs, params = profile_model(model, test_loader, device=cfg.DEVICE)
     print("*"*20)
     print("* MACs (M): {} *".format(macs/10**6))
     print("* #Params (M): {} *".format(params / 10**6))
-    print("* Model Size (MB): {} *".format(params * 8 / 10**6))
+    print("* Model Size (MB): {} *".format(params * 8 / 10**6))  # torch.float64 by default
     print('*'*20)
 
 if __name__ == '__main__':

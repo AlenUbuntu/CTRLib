@@ -216,16 +216,13 @@ class CriteoDataset(torch.utils.data.Dataset):
             feat_stat = conf['feat_stat']
 
             if type_ == 'category':
-                emb_dim = conf['emb_dim']
-                aggregate = conf['aggregate']
 
                 if trans_ == 'hash_bucket':
-                    column = categorical_column_with_hash_bucket(field_name, params_, missing_strategy, missing_value, os.path.join(data_dir, feat_stat), emb_dim, aggregate)
+                    column = categorical_column_with_hash_bucket(field_name, params_, missing_strategy, missing_value, os.path.join(data_dir, feat_stat))
                 if trans_ == 'identity':
-                    column = categorical_column_with_identity(field_name, params_, missing_strategy, missing_value, os.path.join(data_dir, feat_stat), emb_dim, aggregate)
+                    column = categorical_column_with_identity(field_name, params_, missing_strategy, missing_value, os.path.join(data_dir, feat_stat))
                 if trans_ == 'vocab':
-                    column = categorical_column_with_vocabulary_file(field_name, os.path.join(data_dir, params_), missing_strategy, missing_value, os.path.join(data_dir, feat_stat), 
-                    emb_dim, aggregate)
+                    column = categorical_column_with_vocabulary_file(field_name, os.path.join(data_dir, params_), missing_strategy, missing_value, os.path.join(data_dir, feat_stat))
             else:
                 normalization, boundaries = params_['normalization'], params_['boundaries']
                 if trans_ == 'min_max':

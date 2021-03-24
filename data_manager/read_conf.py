@@ -50,11 +50,6 @@ def check_field_conf(data_dir, field, **kwargs):
                 "Invalid missing_strategy `{}` for field `{}` in field conf, "
                 "must be one of `most-frequent`, `special-token`, and 'zero-out'.".format(missing_strategy, field))
         
-        aggregate = kwargs['aggregate']
-        emb_dim = kwargs['emb_dim']
-        assert isinstance(emb_dim, int) and emb_dim > 0, "Invalid embedding dimension `{}` for field `{}` in field conf, must be a positive integer".format(emb_dim, field)
-        assert isinstance(aggregate, str) and aggregate in {'sum', 'avg'}, "Invalid aggregate method `{}` for field `{}` in field conf, must be one of `sum` and `avg`.".format(aggregate, field)
-
         if not isinstance(os.path.join(data_dir, feat_stat), str) or not os.path.isfile(os.path.join(data_dir, feat_stat)):
             raise TypeError('Invalid feature statistics file path `{}` for field `{}` in field conf, '
                                 'feat_stat must be a path to feature statistics file.'.format(os.path.join(data_dir, feat_stat), field))
@@ -115,7 +110,4 @@ def check_field_conf(data_dir, field, **kwargs):
                     assert isinstance(v, (int, float)), \
                             "Invalid parameter `{}` for field `{}` in field conf, " \
                             "discretize parameter element must be integer or float.".format(boundaries, field)
-                if boundaries:
-                    emb_dim = kwargs['emb_dim']
-                    assert isinstance(emb_dim, int) and emb_dim > 0, "Invalid embedding dimension `{}` for field `{}` in field conf, must be a positive integer".format(emb_dim, field)
                     
