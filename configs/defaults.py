@@ -82,3 +82,13 @@ _C.DNN.LATENT_DIM = 512
 _C.DNN.AGGREGATE = 'sum'
 _C.DNN.HIDDEN_DIMS_FRACTOR = (.5, .5, .5)
 _C.DNN.DROPOUT_PROB = 0.5
+
+# ------------------------------
+# Wide & Deep 
+# ------------------------------
+_C.WD = CN()
+
+_C.WD.LATENT_DIM = 512
+_C.WD.AGGREGATE = 'sum'
+_C.WD.HIDDEN_DIMS_FRACTOR = (.5, .5, .5)
+_C.WD.DROPOUT_PROB = 0.5

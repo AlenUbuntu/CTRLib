@@ -4,9 +4,11 @@ To compute MACs, we only care multiplication and add operations.
 
 from common.efficiency_utils import * 
 
-from models.lr import *
-from models.fm import *
-from models.dnn import *
+from models.lr import LogisticRegressionModel
+from models.fm import FactorizationMachineModel
+from models.dnn import DNNYouTubeModel
+from models.wd import WideAndDeepModel
+
 from common.layers import *
 
 def prRed(skk): print("\033[91m{}\033[00m".format(skk))
@@ -65,6 +67,7 @@ register_hooks = {
     LogisticRegressionModel: count_lr,
     FactorizationMachineModel: count_fm,
     DNNYouTubeModel: count_dnn,
+    WideAndDeepModel: count_wd,
 }
 
 

@@ -211,3 +211,16 @@ def count_dnn(m, x, y):
     total_ops += count_mlp(m.mlp, x, y)
 
     return total_ops
+
+
+def count_wd(m, x, y):
+    total_ops = 0
+
+    total_ops += count_feature_linear(m.linear, x, y)
+    x = m.input(x)
+    x = x[0]
+    total_ops += count_mlp(m.mlp, x, y)
+
+    total_ops += 2
+
+    return total_ops

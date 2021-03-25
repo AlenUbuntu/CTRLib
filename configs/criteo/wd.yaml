@@ -1,6 +1,6 @@
-DEVICE: 'cuda:0'
+DEVICE: 'cuda:2'
 OUTPUT_DIR: './experiments/'
-MODEL_NAME: 'dnn'
+MODEL_NAME: 'wd'
 DATASET:
   NAME: 'Criteo'
   CACHE_PATH: '/home/alan/Downloads/recommendation/Criteo/criteo'
@@ -12,10 +12,10 @@ DATALOADER:
 OPTIMIZER:
   NAME: 'adam'
   LR: 1e-2
-  MAX_EPOCH: 20
+  MAX_EPOCH: 30
   LR_SCHEDULER: 'cosine_annealing_lr'
-DNN:
+WD:
   LATENT_DIM: 64
   AGGREGATE: 'sum'
-  HIDDEN_DIMS_FRACTOR: (.3, .5, .5)
-  DROPOUT_PROB: .2
+  HIDDEN_DIMS_FRACTOR: (.6, )
+  DROPOUT_PROB: .5

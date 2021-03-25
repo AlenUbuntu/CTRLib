@@ -14,6 +14,7 @@ from common.profile import profile
 from models.lr import LogisticRegressionModel
 from models.fm import FactorizationMachineModel
 from models.dnn import DNNYouTubeModel
+from models.wd import WideAndDeepModel
 
 def get_unique_temp_folder(input_temp_folder_path):
     """
@@ -70,10 +71,14 @@ def get_model(cfg, field_info):
 
     if name == 'lr':
         return LogisticRegressionModel(cfg, field_info)
-    if name == 'fm':
+    elif name == 'fm':
         return FactorizationMachineModel(cfg, field_info)
-    if name == 'dnn':
+    elif name == 'dnn':
         return DNNYouTubeModel(cfg, field_info)
+    elif name == 'wd':
+        return WideAndDeepModel(cfg, field_info)
+    else:
+        raise NotImplementedError("Model {} is not supported yet".format(name))
 
 
 def train(cfg, model, train_loader, valid_loader, save=False):
@@ -208,8 +213,6 @@ def main():
     cfg.merge_from_file(args.config_file)
     cfg.freeze()
 
-    assert cfg.MODEL_NAME in {'lr', 'fm', 'dnn', 'all'}, "Unexpected model: {}, must be one of 'lr', 'all'.".format(args.model)
-
     # # create output dir
     # experiment_dir = get_unique_temp_folder(cfg.OUTPUT_DIR)
 
@@ -239,12 +242,12 @@ def main():
     # create model 
     model = get_model(cfg, field_info)
 
-    # best_model = train(cfg, model, train_loader, valid_loader, save=False)
-    # auc, log_loss = test(cfg, best_model, test_loader, device=cfg.DEVICE)
-    # print("*"*20)
-    # print("* Test AUC: {:.5f} *".format(auc))
-    # print("* Test Log Loss: {:.5f} *".format(log_loss))
-    # print("*"*20)
+    best_model = train(cfg, model, train_loader, valid_loader, save=False)
+    auc, log_loss = test(cfg, best_model, test_loader, device=cfg.DEVICE)
+    print("*"*20)
+    print("* Test AUC: {:.5f} *".format(auc))
+    print("* Test Log Loss: {:.5f} *".format(log_loss))
+    print("*"*20)
     
     model.eval()
     macs, params = profile_model(model, test_loader, device=cfg.DEVICE)
